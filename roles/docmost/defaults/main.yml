@@ -1,0 +1,7 @@
+---
+deployment_path: /opt/docmost
+environment: "{{ env | default('staging') }}"
+docmost_version: 0.5.0
+docmost_domain: docmost.mydomain.com
+nginx_instances: "{{ 1 if environment == 'staging' else 2 }}"
+docmost_instances: "{{ 2 if environment == 'staging' else 3 }}"

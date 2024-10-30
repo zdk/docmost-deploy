@@ -1,0 +1,27 @@
+---
+- name: Copy Docker Compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ deployment_path }}/docker-compose.yml"
+  notify: reload systemd
+
+- name: Copy Nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: "{{ deployment_path }}/nginx/nginx.conf"
+  notify: reload nginx
+
+- name: Copy systemd service file
+  template:
+    src: docmost.service.j2
+    dest: /etc/systemd/system/docmost.service
+  notify: reload systemd
+
+- name: Template logrotate configuration
+  template:
+    src: docmost-logrotate.j2
+    dest: /etc/logrotate.d/docmost
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd

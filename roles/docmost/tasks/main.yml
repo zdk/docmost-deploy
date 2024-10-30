@@ -1,0 +1,7 @@
+---
+- import_tasks: packages.yml
+- import_tasks: docker.yml
+- import_tasks: setup.yml
+- import_tasks: config.yml
+- import_tasks: service.yml
+- import_tasks: healthcheck.yml

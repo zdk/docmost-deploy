@@ -1,0 +1,22 @@
+---
+- name: Wait for services to be healthy
+  uri:
+    url: "http://localhost/health"
+    return_content: yes
+  register: health_check
+  until: health_check.status == 200
+  retries: 12
+  delay: 5
+
+- name: Check individual Docmost instances
+  uri:
+    url: "http://localhost:3000/health"
+    return_content: yes
+  register: docmost_health
+  until: docmost_health.status == 200
+  retries: 12
+  delay: 5
+  loop:
+    - docmost1
+    - docmost2
+    - docmost3

@@ -1,0 +1,12 @@
+---
+- name: Create Docmost directory
+  file:
+    path: "{{ deployment_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Create Nginx config directory
+  file:
+    path: "{{ deployment_path }}/nginx"
+    state: directory
+    mode: "0755"

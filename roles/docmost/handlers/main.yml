@@ -1,0 +1,9 @@
+---
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: reload nginx
+  command: docker exec nginx{{ item }} nginx -s reload
+  loop: "{{ range(1, nginx_instances + 1)|list }}"
+  ignore_errors: yes
