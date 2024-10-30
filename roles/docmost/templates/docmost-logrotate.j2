@@ -1,0 +1,12 @@
+/var/log/docmost/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 {{ ansible_user }} {{ ansible_user }}
+    postrotate
+        systemctl kill -s USR1 docmost.service
+    endscript
+}

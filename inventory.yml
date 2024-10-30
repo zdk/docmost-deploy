@@ -1,0 +1,54 @@
+---
+all:
+  children:
+    staging:
+      hosts:
+        staging-1:
+          ansible_host: 192.168.33.10
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/staging_key
+          docmost_instances: 2
+          nginx_instances: 1
+          environment: staging
+
+    production:
+      hosts:
+        prod-1:
+          ansible_host: 10.0.1.10
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/prod_key
+          docmost_instances: 3
+          nginx_instances: 2
+          environment: production
+        prod-2:
+          ansible_host: 10.0.1.11
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/prod_key
+          docmost_instances: 3
+          nginx_instances: 2
+          environment: production
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    docmost_version: 0.5.0
+    docmost_domain: docmost.mydomain.com
+    postgres_password: "{{ vault_postgres_password }}"
+    redis_password: "{{ vault_redis_password }}"
+
+    # Common configuration
+    backup_enabled: true
+    monitoring_enabled: true
+    ssl_enabled: true
+
+    # Environment-specific defaults
+    staging_vars:
+      docmost_instances: 2
+      nginx_instances: 1
+      memory_limit: 4G
+      cpu_limit: 2
+
+    production_vars:
+      docmost_instances: 3
+      nginx_instances: 2
+      memory_limit: 8G
+      cpu_limit: 4

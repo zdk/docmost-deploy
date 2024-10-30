@@ -1,0 +1,58 @@
+[Unit]
+Description=Docmost Application Stack ({{ environment | upper }})
+Requires=docker.service
+After=docker.service network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ deployment_path }}
+User={{ ansible_user }}
+Group=docker
+
+# Environment variables
+Environment=COMPOSE_PROJECT_NAME=docmost_{{ environment }}
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+{% if environment == 'production' %}
+Environment=DOCKER_COMPOSE_FLAGS=--compatibility
+{% endif %}
+
+# Startup command
+ExecStartPre=-/usr/local/bin/docker-compose down
+ExecStartPre=/usr/local/bin/docker-compose pull
+ExecStart=/usr/local/bin/docker-compose up -d
+
+# Shutdown command
+ExecStop=/usr/local/bin/docker-compose down
+
+# Reload command (for config changes)
+ExecReload=/usr/local/bin/docker-compose up -d --no-deps --build
+
+# Resource limits
+{% if environment == 'production' %}
+CPUQuota=400%
+MemoryLimit=16G
+{% else %}
+CPUQuota=200%
+MemoryLimit=8G
+{% endif %}
+
+# Restart configuration
+Restart=on-failure
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+
+# Logging
+StandardOutput=append:/var/log/docmost/docmost.log
+StandardError=append:/var/log/docmost/docmost.error.log
+
+[Install]
+WantedBy=multi-user.target

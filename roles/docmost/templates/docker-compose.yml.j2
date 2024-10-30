@@ -1,0 +1,125 @@
+version: '3.8'
+
+x-docmost-common: &docmost-common
+  image: docmost/docmost:{{ docmost_version | default('latest') }}
+  restart: unless-stopped
+  environment:
+    - DB_HOST=postgres
+    - DB_USER=docmost
+    - DB_PASSWORD={{ postgres_password }}
+    - DB_NAME=docmost
+    - REDIS_HOST=redis
+    - REDIS_PASSWORD={{ redis_password }}
+    - NODE_ENV={{ environment }}
+    {% if ssl_enabled %}
+    - SSL_ENABLED=true
+    {% endif %}
+  depends_on:
+    - postgres
+    - redis
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  deploy:
+    resources:
+      limits:
+        cpus: '{{ "1.0" if environment == "staging" else "2.0" }}'
+        memory: '{{ "2G" if environment == "staging" else "4G" }}'
+
+services:
+{% for i in range(nginx_instances) %}
+  nginx{{ i + 1 }}:
+    image: nginx:alpine
+    ports:
+      - "{{ 80 + i }}:80"
+      - "{{ 443 + i }}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+{% for j in range(docmost_instances) %}
+      - docmost{{ j + 1 }}
+{% endfor %}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+{% endfor %}
+
+{% for i in range(docmost_instances) %}
+  docmost{{ i + 1 }}:
+    <<: *docmost-common
+    hostname: docmost{{ i + 1 }}
+{% endfor %}
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=docmost
+      - POSTGRES_PASSWORD={{ postgres_password }}
+      - POSTGRES_DB=docmost
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docmost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ "1.0" if environment == "staging" else "2.0" }}'
+          memory: '{{ "2G" if environment == "staging" else "4G" }}'
+
+  redis:
+    image: redis:alpine
+    command: redis-server --requirepass {{ redis_password }}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "{{ redis_password }}", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '{{ "0.5" if environment == "staging" else "1.0" }}'
+          memory: '{{ "1G" if environment == "staging" else "2G" }}'
+
+{% if monitoring_enabled %}
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+{% endif %}
+
+volumes:
+  postgres_data:
+  redis_data:
+{% if monitoring_enabled %}
+  prometheus_data:
+  grafana_data:
+{% endif %}
+
+networks:
+  default:
+    driver: bridge
