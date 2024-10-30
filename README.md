@@ -1,5 +1,9 @@
 # Docmost Deploy - Ansible
 
+# Install Ansible
+
+`python3 -m pip install --user ansible`
+
 # For staging
 
 `ansible-playbook -i inventory.yml site.yml --limit staging`
@@ -17,24 +21,24 @@
 ├── inventory.yml
 ├── roles
 │   └── docmost
-│   ├── defaults
-│   │   └── main.yml
-│   ├── handlers
-│   │   └── main.yml
-│   ├── meta
-│   │   └── main.yml
-│   ├── tasks
-│   │   ├── config.yml
-│   │   ├── docker.yml
-│   │   ├── healthcheck.yml
-│   │   ├── main.yml
-│   │   ├── packages.yml
-│   │   ├── service.yml
-│   │   └── setup.yml
-│   └── templates
-│   ├── docker-compose.yml.j2
-│   ├── dockmost.service.j2
-│   ├── docmost-logrotate.j2
-│   └── nginx.conf.j2
+│       ├── defaults
+│       │   └── main.yml
+│       ├── handlers
+│       │   └── main.yml
+│       ├── meta
+│       │   └── main.yml
+│       ├── tasks
+│       │   ├── config.yml
+│       │   ├── docker.yml
+│       │   ├── healthcheck.yml
+│       │   ├── main.yml
+│       │   ├── packages.yml
+│       │   ├── service.yml
+│       │   └── setup.yml
+│       └── templates
+│           ├── docker-compose.yml.j2
+│           ├── dockmost.service.j2
+│           ├── docmost-logrotate.j2
+│           └── nginx.conf.j2
 └── site.yml
 ```
